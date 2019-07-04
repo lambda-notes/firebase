@@ -1,48 +1,50 @@
-// const db = require('../database/dbConfig.js');
-const db = admin.firestore();
+// const functions = require('firebase-functions');
+// const admin = require('firebase-admin');
+// admin.initializeApp(functions.config().firebase);
+// const db = admin.firestore();
 
 module.exports = {
-  find,
-  findById,
-  findBySprintId,
-  findByCohortId,
-  insert,
-  update,
-  remove
+    find,
+    findById,
+    findBySprintId,
+    findByCohortId,
+    insert,
+    update,
+    remove
 };
 
 function find() {
-  return db('lessons');
+    return db('lessons');
 }
 
 function findById(id) {
-  return db('lessons')
-    .where({ id })
-    .first();
+    return db('lessons')
+        .where({ id })
+        .first();
 }
 
 function findBySprintId(sprintID) {
-  return db('lessons').where({ sprintID });
+    return db('lessons').where({ sprintID });
 }
 function findByCohortId(cohortID) {
-  console.log('Working');
-  return db('lessons').where({ lessonsCohortID: cohortID });
+    console.log('Working');
+    return db('lessons').where({ lessonsCohortID: cohortID });
 }
 
 function insert(lesson) {
-  return db('lessons')
-    .insert(lesson)
-    .then(lessonID => lessonID);
+    return db('lessons')
+        .insert(lesson)
+        .then(lessonID => lessonID);
 }
 
 function update(changes, id) {
-  return db('lessons')
-    .where({ id })
-    .update(changes);
+    return db('lessons')
+        .where({ id })
+        .update(changes);
 }
 
 function remove(id) {
-  return db('lessons')
-    .where({ id })
-    .del();
+    return db('lessons')
+        .where({ id })
+        .del();
 }
