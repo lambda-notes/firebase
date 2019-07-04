@@ -23,10 +23,11 @@ function findById(id) {
 
 // Finish all below this line later
 
-function insert(creds) {
-	return db('users')
-		.insert(creds)
-		.then(ids => ids);
+function insert(db, creds) {
+	return db
+		.collections('users')
+		.doc(creds.id)
+		.set(creds);
 }
 
 function update(id, changes) {

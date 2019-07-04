@@ -3,6 +3,21 @@ const Users = require('./usersModel.js');
 
 const router = express.Router();
 
+router.post('/', async (req, res) => {
+	try {
+		await Users.insert(req.db, req.creds);
+		res.status(200).json({
+			error: false,
+			message: 'The user was added.'
+		});
+	} catch (error) {
+		res.status(500).json({
+			error: false,
+			message: 'The user could not be inserted.'
+		});
+	}
+});
+
 // Get all users request
 router.get('/', async (req, res) => {
 	try {
