@@ -11,6 +11,10 @@ const app = express();
 
 //Middleware
 app.use(cors({ origin: true }));
+app.use((req, res, next) => {
+	req.db = db;
+	next();
+});
 
 const usersRouter = require('./users/usersRouter');
 const notesRouter = require('./notes/notesRouter');
