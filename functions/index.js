@@ -1,34 +1,26 @@
+// Firebase
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-// admin.initializeApp(functions.config().firebase);
+
+// Initialize Firebase
 admin.initializeApp(functions.config().firebase);
+
+//Databse reference
 const db = admin.firestore();
 
-const express = require('express');
-const cors = require('cors');
-
-const app = express();
-
-//Middleware
-app.use(cors({ origin: true }));
-app.use((req, res, next) => {
-	req.db = db;
-	next();
+// CORS middleware
+const cors = require('cors')({
+	origin: true
 });
 
-const usersRouter = require('./users/usersRouter');
-const notesRouter = require('./notes/notesRouter');
-const lessonsRouter = require('./lessons/lessonsRouter');
-const videosRouter = require('./videos/videosRouter');
-const trackRouter = require('./track/trackRouter');
-const sprintsRouter = require('./sprints/sprintsRouter');
+exports.addUser = functions.https.onRequest((req, res) => {
+	if (req.method === 'PUT') {
+		return res.status(403).send('Forbidden!');
+	}
 
-// Router assignments
-app.use('/users', usersRouter);
-app.use('/notes', notesRouter);
-app.use('/lessons', lessonsRouter);
-app.use('/videos', videosRouter);
-app.use('/tracks', trackRouter);
-app.use('/sprints', sprintsRouter);
-
-exports.lambdaNotes = functions.https.onRequest(app);
+	// Enable CORS using the `cors` express middleware.
+	return cors(req, res, () => {
+		db.collection('users').add(req.body);
+		res.status(200).send('Success');
+	});
+});
