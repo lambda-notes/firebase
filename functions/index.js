@@ -24,3 +24,13 @@ exports.addUser = functions.https.onRequest((req, res) => {
 		res.status(200).send('Success');
 	});
 });
+
+exports.addNote = functions.https.onCall(async (data, context) => {
+	await db.collection('users').add(data);
+	let user = await db
+		.collection('users')
+		.where('name', '==', 'mike')
+		.get();
+
+	return user.data();
+});
