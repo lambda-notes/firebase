@@ -31,7 +31,7 @@ function App(props) {
             window.removeEventListener('resize', handleResize);
         };
     }, []);
-
+    console.log('State.user:', state.user);
     return (
         <>
             <GlobalStyles />
