@@ -47,7 +47,7 @@ function App(props) {
                     </div>
                 ) : (
                     <>
-                        modalOpen && <Modal />
+                        {/* modalOpen && <Modal /> */}
                         <Route
                             exact
                             path="/"
