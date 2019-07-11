@@ -43,8 +43,8 @@ const Landing = () => {
                 let config = {
                     headers: { Authorization: `token ${token}` }
                 };
-                // console.log(token);
-                // console.log(user);
+                console.log(token);
+                console.log(user);
 
                 dispatch({ type: SET_USER, payload: userProfile });
                 // ...
