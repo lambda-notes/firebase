@@ -10,7 +10,7 @@ import { globalContext } from '../../store/contexts';
 const Landing = props => {
 	const [state, dispatch] = useStateValue(globalContext);
 
-	console.log(state.user);
+
 	return (
 		<Styles>
 			<div className='background' />

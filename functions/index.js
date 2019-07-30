@@ -1,6 +1,12 @@
 // Firebase
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const auth = require('./middleware/auth');
+
+const express = require('express');
+const cors = require('cors');
+
+const app = express();
 
 // Initialize Firebase
 admin.initializeApp(functions.config().firebase);
@@ -8,29 +14,27 @@ admin.initializeApp(functions.config().firebase);
 //Databse reference
 const db = admin.firestore();
 
-// CORS middleware
-const cors = require('cors')({
-	origin: true
-});
+// Automatically allow cross-origin requests
+app.use(cors({ origin: true }));
 
-exports.addUser = functions.https.onRequest((req, res) => {
-	if (req.method === 'PUT') {
-		return res.status(403).send('Forbidden!');
+// Add middleware to authenticate requests
+app.use(auth);
+
+// build multiple CRUD interfaces:
+
+app.post('/user', async (req, res) => {
+	const token = res.locals.uid;
+	try {
+		await db.collection('users').add(data);
+		let user = await db
+			.collection('users')
+			.where('uid', '==', `${token}`)
+			.get();
+		res.status(200).json({ message: 'Success', data: user });
+	} catch (error) {
+		res.status(500).json({ message: 'Server error', data: error });
 	}
-
-	// Enable CORS using the `cors` express middleware.
-	return cors(req, res, () => {
-		db.collection('users').add(req.body);
-		res.status(200).send('Success');
-	});
 });
 
-exports.addNote = functions.https.onCall(async (data, context) => {
-	await db.collection('users').add(data);
-	let user = await db
-		.collection('users')
-		.where('name', '==', 'mike')
-		.get();
-
-	return user.data();
-});
+// Expose Express API as a single Cloud Function:
+exports.api = functions.https.onRequest(app);

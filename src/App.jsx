@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Route } from 'react-router-dom';
 import styled from 'styled-components';
 import axios from 'axios';
@@ -43,29 +43,28 @@ function App(props) {
 			window.removeEventListener('resize', handleResize);
 		};
 	}, []);
+
+	const getUserToken = useCallback(async () => {
+		let idToken = await firebase
+			.auth()
+			.currentUser.getIdToken(/* forceRefresh */ true);
+		dispatch({ type: SET_TOKEN, payload: idToken });
+	}, [dispatch]);
+
 	useEffect(() => {
 		firebase.auth().onAuthStateChanged(function(user) {
 			if (user) {
-				// User is signed in.
-				// getToken();
+				getUserToken();
 			} else {
-				// No user is signed in.
-				console.log('no user signed in');
+				console.log('Not signed in!');
 			}
 		});
-	});
-	console.log(state.token);
+	}, [getUserToken]);
 
-	const getToken = async () => {
-		let token = firebase.auth().currentUser.getIdToken(/* forceRefresh */ true);
-		dispatch({ type: SET_TOKEN, payload: token });
-	};
 	const handleLogin = async () => {
 		try {
-			let token = await firebase.auth().signInWithPopup(provider);
-
-			dispatch({ type: SET_TOKEN, payload: token });
-			// ...
+			await firebase.auth().signInWithPopup(provider);
+			getUserToken();
 		} catch (error) {
 			console.log(error);
 		}
