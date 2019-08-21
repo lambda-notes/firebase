@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Route } from 'react-router-dom';
 import styled from 'styled-components';
-import axios from 'axios';
+import API from './utils/API';
 
 // data management
 import { useStateValue } from 'react-conflux';
@@ -12,13 +12,12 @@ import { url } from './components/Auth/config';
 import { GlobalStyles } from './styles';
 
 // component imports
-// import Auth from './components/Auth';
 import MainDashboard from './components/MainDashboard';
 import Landing from './components/Landing';
 import SideNav from './components/SideNav';
 import MobileNav from './components/MainDashboard/MobileNav';
 import Modal from './components/Modal/Modal';
-import { SET_TOKEN } from './store/constants';
+import { SET_TOKEN, SET_USER } from './store/constants';
 // Firebase App (the core Firebase SDK) is always required and
 // must be listed before other Firebase SDKs
 import firebaseConfig from './firebase/fbaseConfig';
@@ -32,96 +31,144 @@ provider.addScope('read:user');
 firebase.auth().useDeviceLanguage();
 
 function App(props) {
-	const [state, dispatch] = useStateValue(globalContext);
-	const { user, modalOpen } = state;
+    const [state, dispatch] = useStateValue(globalContext);
+    const { user, modalOpen } = state;
 
-	const [window_width, setWidth] = useState(window.innerWidth);
-	useEffect(() => {
-		const handleResize = () => setWidth(window.innerWidth);
-		window.addEventListener('resize', handleResize);
-		return () => {
-			window.removeEventListener('resize', handleResize);
-		};
-	}, []);
+    const [window_width, setWidth] = useState(window.innerWidth);
+    useEffect(() => {
+        const handleResize = () => setWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+    const auth = () => {
+        firebase.auth().onAuthStateChanged(function(user) {
+            console.log(user);
+            if (user) {
+                getUserToken();
+                if (!state.user.id) {
+                    getUserData();
+                }
+            } else {
+                console.log('Not signed in!');
+            }
+        });
+    };
+    useEffect(() => {
+        // auth();
+    }, [auth]);
 
-	const getUserToken = useCallback(async () => {
-		let idToken = await firebase
-			.auth()
-			.currentUser.getIdToken(/* forceRefresh */ true);
-		dispatch({ type: SET_TOKEN, payload: idToken });
-	}, [dispatch]);
+    const getUserToken = async () => {
+        let idToken = await firebase
+            .auth()
+            .currentUser.getIdToken(/* forceRefresh */ true);
+        dispatch({ type: SET_TOKEN, payload: idToken });
+    };
+    const getUserData = async () => {
+        console.log(state.token);
+        try {
+            if (state.token) {
+                console.log('GET USER DATA');
+                let response = await API.get('/auth', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: state.token
+                    }
+                });
+                console.log(response);
+                dispatch({ type: SET_USER, payload: response.data.data });
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
-	useEffect(() => {
-		firebase.auth().onAuthStateChanged(function(user) {
-			if (user) {
-				getUserToken();
-			} else {
-				console.log('Not signed in!');
-			}
-		});
-	}, [getUserToken]);
+    const handleLogin = async () => {
+        try {
+            await firebase.auth().signInWithPopup(provider);
+            getUserToken();
+            getUserData();
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
-	const handleLogin = async () => {
-		try {
-			await firebase.auth().signInWithPopup(provider);
-			getUserToken();
-		} catch (error) {
-			console.log(error);
-		}
-	};
+    const handleLogout = async () => {
+        await firebase.auth().signOut();
+        dispatch({ type: SET_TOKEN, payload: '' });
+        // history.push('/');
+    };
 
-	const handleLogout = async () => {
-		await firebase.auth().signOut();
-
-		dispatch({ type: SET_TOKEN, payload: '' });
-		// history.push('/');
-	};
-
-	return (
-		<>
-			<GlobalStyles />
-			<Styles>
-				{state.user.uid ? (
-					<div className='main-view'>
-						{window_width <= 800 ? (
-							<Route path='/dashboard' component={MobileNav} />
-						) : (
-							<Route path='/dashboard' component={SideNav} />
-						)}
-						<Route path='/dashboard' component={MainDashboard} />
-					</div>
-				) : (
-					<>
-						{/* modalOpen && <Modal /> */}
-						<Route
-							exact
-							path='/'
-							render={props => (
-								<Landing
-									handleLogin={handleLogin}
-									handleLogout={handleLogout}
-									{...props}
-								/>
-							)}
-						/>
-					</>
-				)}
-				{/* <Route path="/login" component={Auth} /> */}
-			</Styles>
-		</>
-	);
+    return (
+        <>
+            <GlobalStyles />
+            <Styles>
+                {state.user.uid ? (
+                    <div className="main-view">
+                        {window_width <= 800 ? (
+                            <Route
+                                path="/dashboard"
+                                render={props => (
+                                    <MobileNav
+                                        handleLogout={handleLogout}
+                                        {...props}
+                                    />
+                                )}
+                            />
+                        ) : (
+                            <Route
+                                path="/dashboard"
+                                render={props => (
+                                    <SideNav
+                                        handleLogout={handleLogout}
+                                        {...props}
+                                    />
+                                )}
+                            />
+                        )}
+                        <Route
+                            path="/dashboard"
+                            render={props => (
+                                <MainDashboard
+                                    handleLogout={handleLogout}
+                                    {...props}
+                                />
+                            )}
+                        />
+                    </div>
+                ) : (
+                    <>
+                        {/* modalOpen && <Modal /> */}
+                        <Route
+                            exact
+                            path="/"
+                            render={props => (
+                                <Landing
+                                    handleLogin={handleLogin}
+                                    handleLogout={handleLogout}
+                                    {...props}
+                                />
+                            )}
+                        />
+                    </>
+                )}
+                {/* <Route path="/login" component={Auth} /> */}
+            </Styles>
+        </>
+    );
 }
 
 export default App;
 
 const Styles = styled.div`
-	height: 100vh;
-	.main-view {
-		display: flex;
-		height: 100vh;
+    height: 100vh;
+    .main-view {
+        display: flex;
+        height: 100vh;
 
-		@media (max-width: 800px) {
-			flex-direction: column;
-		}
-	}
+        @media (max-width: 800px) {
+            flex-direction: column;
+        }
+    }
 `;

@@ -9,7 +9,7 @@ const auth = async (req, res, next) => {
 				.verifyIdToken(req.headers.authorization);
 			res.locals.uid = decodedToken.uid;
 			next();
-			return;
+			return
 		} else {
 			res.status(403).json({ message: 'No authentication token' });
 		}
