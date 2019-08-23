@@ -42,31 +42,15 @@ function App(props) {
             window.removeEventListener('resize', handleResize);
         };
     }, []);
-    const auth = () => {
-        firebase.auth().onAuthStateChanged(function(user) {
-            console.log(user);
-            if (user) {
-                getUserToken();
-                if (!state.user.id) {
-                    getUserData();
-                }
-            } else {
-                console.log('Not signed in!');
-            }
-        });
-    };
-    useEffect(() => {
-        // auth();
-    }, [auth]);
-
-    const getUserToken = async () => {
+    const getUserToken = useCallback(async () => {
         let idToken = await firebase
             .auth()
             .currentUser.getIdToken(/* forceRefresh */ true);
-        dispatch({ type: SET_TOKEN, payload: idToken });
-    };
-    const getUserData = async () => {
-        console.log(state.token);
+        if (!state.token) {
+            dispatch({ type: SET_TOKEN, payload: idToken });
+        }
+    }, [dispatch, state.token]);
+    const getUserData = useCallback(async () => {
         try {
             if (state.token) {
                 console.log('GET USER DATA');
@@ -82,8 +66,21 @@ function App(props) {
         } catch (error) {
             console.log(error);
         }
-    };
+    }, [dispatch, state.token]);
 
+    useEffect(() => {
+        firebase.auth().onAuthStateChanged(function(user) {
+            console.log(user);
+            if (user) {
+                getUserToken();
+                if (!state.user.id) {
+                    getUserData();
+                }
+            } else {
+                console.log('Not signed in!');
+            }
+        });
+    }, [getUserData, getUserToken, state.token, state.user.id]);
     const handleLogin = async () => {
         try {
             await firebase.auth().signInWithPopup(provider);
