@@ -42,6 +42,7 @@ function App(props) {
             window.removeEventListener('resize', handleResize);
         };
     }, []);
+
     const getUserToken = useCallback(async () => {
         let idToken = await firebase
             .auth()
@@ -50,6 +51,7 @@ function App(props) {
             dispatch({ type: SET_TOKEN, payload: idToken });
         }
     }, [dispatch, state.token]);
+
     const getUserData = useCallback(async () => {
         try {
             if (state.token) {
@@ -81,6 +83,7 @@ function App(props) {
             }
         });
     }, [getUserData, getUserToken, state.token, state.user.id]);
+
     const handleLogin = async () => {
         try {
             await firebase.auth().signInWithPopup(provider);

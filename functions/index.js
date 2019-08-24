@@ -17,6 +17,26 @@ const db = admin.firestore();
 // Automatically allow cross-origin requests
 app.use(cors({ origin: true }));
 
+app.get('/test', async (req, res) => {
+    try {
+        let data;
+        await db
+            .collection('track')
+            .where('title', '==', 'Full Stack Web Development')
+            .get()
+            .then(querySnapshot => {
+                querySnapshot.forEach(doc => {
+                    // doc.data() is never undefined for query doc snapshots
+                    data = doc.data();
+                });
+                return;
+            });
+        res.send(data);
+    } catch (err) {
+        res.send(err);
+    }
+});
+
 // Add middleware to authenticate requests
 app.use(auth);
 
